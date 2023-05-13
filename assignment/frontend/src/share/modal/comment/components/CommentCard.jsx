@@ -42,8 +42,6 @@ const CommentCard = ({ click, comment = { id: -1, msg: '' }, setComments = () =>
       }
               
     } else if (functionMode === 'delete') {
-      console.log('hello');
-      // Send DELETE request to the server
       try {
         const userToken = Cookies.get('UserToken');
         const response = await Axios.delete('/comment', {
