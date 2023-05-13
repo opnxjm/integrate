@@ -23,14 +23,10 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
   }, ['Enter']);
 
   useEffect(() => {
-    // TODO: Implement get notes by user's token
-    // 1. check if user is logged in
-    console.log(toggle);
+
     const userToken = Cookies.get('UserToken');
     if (userToken !== undefined && userToken !== 'undefined') {
-      // 2. call API to get notes
       Axios.get('/comment', { headers: { Authorization: `Bearer ${userToken}` } }).then((res) => {
-        // 3. set notes to state
         const commentsData = res.data.data.map((comment) => ({
           id: comment.id,
           msg: comment.text,
@@ -40,12 +36,6 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
       });
     }
   }, [toggle])
-  // const handleAddComment = () => {
-   
-  //     //setComments((prev) => [...prev,response.data.data]);
-  //     setComments([...comments, { id: Math.random(), msg: textField }]);
-    
-  //     }
   const handleAddComment = async () => {
     // TODO implement logic
     if (!validateForm()) return;
@@ -63,7 +53,6 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
       // 3. if successful, add new comment to state and close modal
       if (response.data.success) {
         setStatus({ severity: 'success', msg: 'Create comment successfully' });
-        // setComments((prev) => [...prev, response.data.data]);
         setComments([...comments, { id: Math.random(), msg: textField }]);
         resetAndClose();
       }
@@ -74,7 +63,6 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
         setStatus({ severity: 'error', msg: error.message });
       }
     }
-    // setComments([...comments, { id: Math.random(), msg: textField }]);
   };
   const validateForm = () => {
     if (textField == '') {
