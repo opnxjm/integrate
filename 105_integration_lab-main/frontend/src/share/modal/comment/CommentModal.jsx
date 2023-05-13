@@ -13,6 +13,7 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
 
   const handleAddComment = () => {
     // TODO implement logic
+    
     setComments([...comments, { id: Math.random(), msg: textField }]);
   };
 

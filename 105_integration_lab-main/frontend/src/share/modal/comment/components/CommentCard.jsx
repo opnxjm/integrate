@@ -9,6 +9,7 @@ const CommentCard = ({ comment = { id: -1, msg: '' } }) => {
   const submit = useCallback(() => {
     if (functionMode === 'update') {
       // TODO implement update logic
+      
       console.log('update');
     } else if (functionMode === 'delete') {
       // TODO implement delete logic
