@@ -1,84 +1,71 @@
 import { Button, Card, TextField, Typography } from '@mui/material';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import Cookies from 'js-cookie';
 import Axios from '../../../AxiosInstance';
 import { AxiosError } from 'axios';
-import GlobalContext from '../../../Context/GlobalContext';
-import Cookies from 'js-cookie';
 
-const CommentCard = ({ comment = { id: -1, msg: '' } }) => {
+const CommentCard = ({ click, comment = { id: -1, msg: '' }, setComments = () => { } }) => {
   const [isConfirm, setIsConfirm] = useState(false);
   const [functionMode, setFunctionMode] = useState('update');
   const [msg, setMsg] = useState(comment.msg);
-  const [error, setError] = useState({});
-  const { setStatus } = useContext(GlobalContext);
-  const [toggle, setToggle] = useState(false);
-  useEffect(() => {
-    submit()
-  }, [toggle]);
-  const click = () =>{
-    setToggle(!toggle)
-  }
-  const submit = useCallback( () => {
+
+  const submit = useCallback(async() => {
     if (functionMode === 'update') {
       // TODO implement update logic
-      const userToken = Cookies.get('UserToken');
-      Axios.patch('/comment',
-      {
-        text: msg,
-        commentId: comment.id,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}`},
-      }).then((response) => {
-        if (response.data.success){
-          setMsg(response.data.data.text);
-          setStatus({
-            severity: 'success', 
-            msg: 'Update success'
-          });
-          console.log('update success');
-          click();
-        }
-        else{
-          console.log('Fail');
-        }
-      }).catch((error) => {
-        if (error instanceof AxiosError && error.response) {
-          console.log(error.response.data);
-        } else {
-          console.log(error.message);
-        }
-      });
-
-    } else if (functionMode === 'delete') {
-      // TODO implement delete logic
-      const userToken = Cookies.get('UserToken');
-      Axios.delete('/comment',
-      {
-        headers: { Authorization: `Bearer ${userToken}`},
-        data: { commentId: comment.id }
-      }).then((response) => {
-        if (response.data.success) {
-          // set(() => msg.filter((n) => n.id !== comment.id));
-          setMsg('');
-          setStatus({
-            severity: 'success', 
-            msg: 'delete success'
-          });
-          //setMsg((data) => data.filter((c) => c.id !== comment.id));
-          console.log('delete');
-          //cancelAction();
-        } else {
-          console.log(error.message);
-        }
-      }).catch((error) => {
-        if (error instanceof AxiosError && error.response) {
-          console.log(error.response.data);
-        } else {
-          console.log(error.message);
-        }
-      });
+      try {
+        const userToken = Cookies.get('UserToken');
+        const response = await Axios.patch(
+          '/comment',
+          {
+            text: msg,
+            commentId: comment.id,
+          },
+          {
+            headers: { Authorization: `Bearer ${userToken}` },
+          }
+        );
       
+        if (response.data.success) {
+          // update comment in the parent component
+          comment.msg = response.data.data.text;
+          console.log('update success');
+          cancelAction(); // to toggle off the confirm 
+        } else {
+          console.log('Failed to update comment');
+        }
+      } catch (error) {
+        if (error instanceof AxiosError && error.response) {
+          console.log(error.response.data);
+        } else {
+          console.log(error.message);
+        }
+      }
+              
+    } else if (functionMode === 'delete') {
+      console.log('hello');
+      // Send DELETE request to the server
+      try {
+        const userToken = Cookies.get('UserToken');
+        const response = await Axios.delete('/comment', {
+          headers: { Authorization: `Bearer ${userToken}` },
+          data: { commentId: comment.id }
+        }
+        );
+        if (response.data.success) {
+          // Perform any necessary actions after successful deletion
+          setComments((comments) => comments.filter((c) => c.id !== comment.id));
+          console.log('Comment deleted successfully');
+          cancelAction(); // to toggle off the confirm
+        } else {
+          console.log('Failed to delete comment');
+        }
+      } catch (error) {
+        if (error instanceof AxiosError && error.response) {
+          console.log(error.response.data);
+        } else {
+          console.log(error.message);
+        }
+      }
     } else {
       // TODO setStatus (snackbar) to error
       console.log('error');
@@ -107,7 +94,7 @@ const CommentCard = ({ comment = { id: -1, msg: '' } }) => {
           update
         </Button>
       ) : (
-        <Button onClick={submit} variant="outlined" color="success">
+        <Button onClick={() => {click(), submit()}} variant="outlined" color="success">
           confirm
         </Button>
       )}

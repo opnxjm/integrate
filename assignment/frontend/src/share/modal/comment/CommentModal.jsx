@@ -13,7 +13,11 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
   const [comments, setComments] = useState([]);
   const { setStatus } = useContext(GlobalContext);
   const [error, setError] = useState({});
-
+  const [toggle, setToggle] = useState(false);
+  const click = () =>{
+    setToggle(!toggle);
+    
+  }
   useKeyDown(() => {
     handleAddComment();
   }, ['Enter']);
@@ -21,6 +25,7 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
   useEffect(() => {
     // TODO: Implement get notes by user's token
     // 1. check if user is logged in
+    console.log(toggle);
     const userToken = Cookies.get('UserToken');
     if (userToken !== undefined && userToken !== 'undefined') {
       // 2. call API to get notes
@@ -34,8 +39,13 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
 
       });
     }
-  }, [])
-
+  }, [toggle])
+  // const handleAddComment = () => {
+   
+  //     //setComments((prev) => [...prev,response.data.data]);
+  //     setComments([...comments, { id: Math.random(), msg: textField }]);
+    
+  //     }
   const handleAddComment = async () => {
     // TODO implement logic
     if (!validateForm()) return;
@@ -127,7 +137,7 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
           }}
         >
           {comments.map((comment) => (
-            <CommentCard comment={comment} key={comment.id} />
+            <CommentCard click={click} comment={comment} key={comment.id} />
           ))}
         </Box>
       </Card>
