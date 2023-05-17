@@ -1,23 +1,77 @@
 import { Box, Button, Card, Modal, TextField } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useKeyDown } from '../../../hooks/useKeyDown';
-import { useEffect } from 'react';
 import Cookies from 'js-cookie';
 import Axios from '../../AxiosInstance';
 import { AxiosError } from 'axios';
+import { CommentContext } from '../../context/CommentContext';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+
 const CommentModal = ({ open = false, handleClose = () => {} }) => {
   const [textField, setTextField] = useState('');
-  const [comments, setComments] = useState([]);
+  const { setStatus, setComments, comments } = useContext(CommentContext);
+  const queryClient = useQueryClient();
+  
 
   useKeyDown(() => {
     handleAddComment();
   }, ['Enter']);
 
-  
-  const handleAddComment = () => {
-    // TODO implement logic
-    
+  const fetchComments = async () => {
+    const response = await Axios.get('/comment');
+    return response.data;
   };
+
+  const { data: fetchedComments } = useQuery('comments', fetchComments);
+
+  useEffect(() => {
+    if (fetchedComments) {
+      setComments(fetchedComments);
+    }
+  }, [fetchedComments, setComments]);
+
+  const addComment = async (newComment) => {
+    const userToken = Cookies.get('UserToken');
+    console.log(newComment);
+    try {
+      const response = await Axios.post('/comment', newComment, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data.error || 'Failed to add comment');
+    }
+  };
+
+  const mutation = useMutation(addComment, {
+    onSuccess: (data) => {
+      setStatus({
+        severity: 'success',
+        msg: 'Comment added successfully',
+      });
+      queryClient.invalidateQueries('comments');
+      setTextField('');
+    },
+    onError: (error) => {
+      if (error instanceof AxiosError && error.response) {
+        setStatus({
+          severity: 'error',
+          msg: error.response.data.error,
+        });
+      } else {
+        setStatus({
+          severity: 'error',
+          msg: error.message,
+        });
+      }
+    },
+  });
+
+  const handleAddComment = (e) => {
+    e.preventDefault();
+    mutation.mutate({ text: textField });
+  };
+
   return (
     <Modal open={open} onClose={handleClose}>
       <Card
@@ -46,7 +100,7 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
             placeholder="Type your comment"
             variant="standard"
           />
-          <Button onClick={handleAddComment}>Submit</Button>
+          <Button onClick={(e) => handleAddComment(e)}>Submit</Button>
         </Box>
         <Box sx={{ overflowY: 'scroll', maxHeight: 'calc(400px - 2rem)' }}>
           {comments.map((comment) => (
