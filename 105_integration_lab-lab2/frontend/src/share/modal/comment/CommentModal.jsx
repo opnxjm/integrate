@@ -32,14 +32,26 @@ const CommentModal = ({ open = false, handleClose = () => {} }) => {
 
   const addComment = async (newComment) => {
     const userToken = Cookies.get('UserToken');
-    console.log(newComment);
     try {
       const response = await Axios.post('/comment', newComment, {
         headers: { Authorization: `Bearer ${userToken}` },
       });
+      console.log(response);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data.error || 'Failed to add comment');
+      if (error instanceof AxiosError && error.response) {
+        // TODO: show status of error from AxiosError here
+        setStatus({
+          severity: 'error',
+          msg: error.response.data.error
+        });
+      } else {
+        // TODO: show status of other errors here
+        setStatus({
+          severity: 'error',
+          msg: error.message
+        });
+      }
     }
   };
 
